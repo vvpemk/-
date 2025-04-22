@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>гифт</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+  <style>
+    .game {
+      position: relative;
+      width: 100%;
+      height: 200px;
+      background-color: #f0f0f0;
+      overflow: hidden;
+      border: 2px solid #ccc;
+      margin-top: 20px;
+    }
+
+    #dino {
+        position: absolute;
+        bottom: 0;
+        left: 50px;
+        width: 60px;
+        height: 60px;
+        object-fit: cover;
+        border-radius: 12px;
+        transition: bottom 0.2s;
+        right: 50px;
+    }
+
+    #obstacle {
+        position: absolute;
+        bottom: 0;
+        right: -30px;
+        width: 40px;
+        height: 40px;
+        animation: moveObstacle 2s linear infinite;
+        object-fit: cover;
+        border-radius: 8px;
+    }
+
+    @keyframes moveObstacle {
+      0% {
+        right: -30px;
+      }
+      100% {
+        right: 100%;
+      }
+    }
+
+    .jumping {
+      animation: jump 0.5s ease-out;
+    }
+
+    @keyframes jump {
+      0% {
+        bottom: 0;
+        left: 50px;
+        right: 50px;
+      }
+      50% {
+        bottom: 150px;
+        left: 100px;
+        right: 10px;
+      }
+      100% {
+        bottom: 0;
+        left: 50px;
+        right: 50px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container text-center mt-5">
+    <div id="start-screen">
+      <h1 class="mb-4">ну что, ты готова?))</h1>
+      <button class="btn btn-primary m-2" onclick="startGame()">япи япиии</button>
+      <button class="btn btn-secondary m-2" onclick="startGame()">еще че</button>
+    </div>
+
+    <div id="story-text" class="d-none">
+      <p>я так и знала, что ты всегда готова)) чтож, чтобы получить подарок — тебе нужно пройти игру (набрать минимум 10 очков)</p>
+      <button class="btn btn-warning mt-3" onclick="nextStep()">урооо</button>
+    </div>
+
+    <div id="character-select" class="d-none">
+        <h2>выбирай за кого играть: </h2>
+        <div class="row justify-content-center">
+          <div class="col-md-3">
+            <div class="card" onclick="chooseCharacter('Polya')">
+              <img src="images/polya_1.jpg" class="card-img-top" alt="Polya" />
+              <div class="card-body">
+                <h5 class="card-title">полинкаполя 😘</h5>
+                <p class="card-text">
+                  Возраст: уже 18 😱😱😱<br />
+                  Способности: убьет и воскресит каждого красотой<br />
+                  побегает с вашей собакой
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card" onclick="chooseCharacter('Katya')">
+              <img src="images/katya_1.jpg" class="card-img-top" alt="Katya" />
+              <div class="card-body">
+                <h5 class="card-title">каья 😈</h5>
+                <p class="card-text">
+                  Возраст: еще 17 🖕<br />
+                  Способности: взломает вас и ваш комп<br />
+                  может притвориться собакой
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card" onclick="chooseCharacter('Nessa')">
+              <img src="images/nessa_1.jpg" class="card-img-top" alt="Nessa" />
+              <div class="card-body">
+                <h5 class="card-title">нессиха 🤙</h5>
+                <p class="card-text">
+                  Возраст: этой твар тоже 18 🙄🙄🙄<br />
+                  Способности: может внезапно сменить и интерьер комнаты, и город где живет<br />
+                  заставит притвориться собакой
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card" onclick="chooseCharacter('Nika')">
+              <img src="images/nika_1.jpg" class="card-img-top" alt="Nika" />
+              <div class="card-body">
+                <h5 class="card-title">ника чика</h5>
+                <p class="card-text">
+                  Возраст: 18 полных годовых лет!!!!😮😮😮<br />
+                  Способности: умеет читать людей и сразу вычислит психопата <br />
+                  сфоткает все что движется (в том числе того, кто бегает с собакой, кто притворяется собакой, кто заставляет притвориться собакой)
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+    </div>
+
+    <div id="countdown" class="display-1 d-none"></div>
+
+    <div id="game-container" class="d-none">
+        <div class="game">
+            <img id="dino" src="images/polya_1.jpg" alt="Персонаж" />
+            <img id="obstacle" src="images/cactus.png" alt="Препятствие" />
+        </div>
+      <button class="btn btn-success mt-3" onclick="jump()">прыг прыг</button>
+      <div class="mt-2">очки: <span id="score">0</span></div>
+    </div>
+
+    <div id="final-message" class="d-none">
+      <h2 id="final-text"></h2>
+      <button class="btn btn-primary mt-3" onclick="restartGame()">еще раз</button>
+
+    </div>
+  </div>
+
+  <script>
+    let score = 0;
+    let gameInterval;
+  
+    function startGame() {
+      document.getElementById('start-screen').classList.add('d-none');
+      document.getElementById('story-text').classList.remove('d-none');
+    }
+  
+    function nextStep() {
+      document.getElementById('story-text').classList.add('d-none');
+      document.getElementById('character-select').classList.remove('d-none');
+    }
+  
+    let characterImage = '';
+    function chooseCharacter(name) {
+      console.log("Выбран персонаж:", name);
+      document.getElementById('character-select').classList.add('d-none');
+  
+      if (name === 'Polya') {
+        characterImage = 'images/polya_2.jpg';
+      } else if (name === 'Katya') {
+        characterImage = 'images/katya_2.jpg';
+      } else if (name === 'Nessa') {
+        characterImage = 'images/nessa_2.jpg';
+      } else if (name === 'Nika') {
+        characterImage = 'images/nika_2.jpg';
+      }
+      startCountdown();
+    }
+  
+    function startCountdown() {
+      const countdownEl = document.getElementById('countdown');
+      let timeLeft = 3;
+      countdownEl.textContent = timeLeft;
+      countdownEl.classList.remove('d-none');
+  
+      const countdownInterval = setInterval(() => {
+        timeLeft--;
+        if (timeLeft > 0) {
+          countdownEl.textContent = timeLeft;
+        } else {
+          clearInterval(countdownInterval);
+          countdownEl.classList.add('d-none');
+          document.getElementById('game-container').classList.remove('d-none');
+          initGame();
+        }
+      }, 1000);
+    }
+  
+    function initGame() {
+      score = 0;
+      const dino = document.getElementById('dino');
+      dino.src = characterImage;
+      const obstacleImages = ['images/cactus1.jpg', 'images/cactus2.jpg', 'images/cactus3.jpg', 'images/cactus4.jpg', 'images/cactus5.jpg'];
+      const obstacle = document.getElementById('obstacle');
+      obstacle.src = obstacleImages[Math.floor(Math.random() * obstacleImages.length)];
+      const scoreEl = document.getElementById('score');
+  
+      const gameWidth = window.innerWidth;  // Получаем ширину экрана для динамических расчётов
+      const speed = gameWidth * 0.007; // скорость зависит от ширины экрана
+  
+      let obstacleX = gameWidth;  // Начальная позиция препятствия
+  
+      gameInterval = setInterval(() => {
+        const dinoRect = dino.getBoundingClientRect();
+        const obstacleRect = obstacle.getBoundingClientRect();
+  
+        if (
+          obstacleRect.left < dinoRect.right &&
+          obstacleRect.right > dinoRect.left &&
+          dinoRect.bottom >= obstacleRect.top
+        ) {
+          endGame(false);
+        }
+  
+        obstacleX -= speed; // Двигаем препятствие в зависимости от скорости
+        if (obstacleX < -50) { // Если препятствие выходит за пределы экрана
+          obstacleX = gameWidth; // Возвращаем его в начальную позицию
+        }
+  
+        obstacle.style.left = obstacleX + 'px'; // Обновляем позицию препятствия
+  
+      }, 10);
+    }
+  
+    function jump() {
+      const dino = document.getElementById('dino');
+      if (dino.classList.contains('jumping')) return;
+  
+      dino.classList.add('jumping');
+  
+      setTimeout(() => {
+        dino.classList.remove('jumping');
+        score++;
+        document.getElementById('score').textContent = score;
+  
+        if (score >= 10) {
+          endGame(true);
+        }
+      }, 500);
+    }
+  
+    function endGame(won) {
+      clearInterval(gameInterval);
+      document.getElementById('game-container').classList.add('d-none');
+      document.getElementById('final-message').classList.remove('d-none');
+  
+      document.getElementById('final-text').textContent = won
+        ? "урааа маладееец!!! теперь можно и подарок получить)) 🎁"
+        : "ну ты попуск ващееее 👻👻👻 давай еще раз";
+    }
+  
+    function restartGame() {
+      document.getElementById('final-message').classList.add('d-none');
+      document.getElementById('score').textContent = "0";
+      document.getElementById('game-container').classList.remove('d-none');
+      score = 0;
+      initGame();
+    }
+  </script>
+  
+</body>
+</html>
